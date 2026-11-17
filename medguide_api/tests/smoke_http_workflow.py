@@ -60,6 +60,7 @@ def run() -> None:
             "APP_ENV": "test",
             "JWT_SECRET": secrets.token_urlsafe(48),
             "DATABASE_PATH": str(Path(temporary) / "smoke.sqlite3"),
+            "ALLOWED_ORIGINS": "http://localhost:5000,http://127.0.0.1:5000",
         })
         server = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(port), "--log-level", "error"],
@@ -85,6 +86,14 @@ def run() -> None:
                     raise RuntimeError("Tempo esgotado aguardando o servidor de teste")
                 health_data = health.json()["data"]
                 print("PASS health endpoint HTTP")
+                preflight = client.options("/api/health", headers={
+                    "Origin": "http://127.0.0.1:5000",
+                    "Access-Control-Request-Method": "GET",
+                    "Access-Control-Request-Headers": "authorization",
+                })
+                assert preflight.status_code == 200
+                assert preflight.headers.get("access-control-allow-origin") == "http://127.0.0.1:5000"
+                print("PASS CORS preflight para Flutter web na porta 5000")
 
                 patient = _expect(client.post("/api/patients/register", json={
                     "name": "Paciente Smoke",

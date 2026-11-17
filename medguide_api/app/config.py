@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     jwt_secret: str = ""
     database_path: str = "./data/medguide.sqlite3"
-    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    allowed_origins: str = "http://localhost:5000,http://127.0.0.1:5000"
     tesseract_cmd: str = ""
     tesseract_languages: str = "por+eng"
     max_upload_bytes: int = 8 * 1024 * 1024
