@@ -90,7 +90,7 @@ O modelo de configuração fica em [`medguide_api/.env.example`](medguide_api/.e
 APP_ENV=development
 JWT_SECRET=replace-with-a-random-secret-at-least-32-characters
 DATABASE_PATH=./data/medguide.sqlite3
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+ALLOWED_ORIGINS=http://localhost:5000,http://127.0.0.1:5000
 TESSERACT_CMD=
 TESSERACT_LANGUAGES=por+eng
 MAX_UPLOAD_BYTES=8388608
@@ -261,7 +261,7 @@ Não há captura de tela de OCR real nos registros disponíveis. Para demonstrar
 
 ### 5.4 Teste de fluxo básico da API (HTTP)
 
-Em 17/11/2026 foi executado um teste de fluxo básico com um servidor local da API iniciado pelo próprio script, chamadas HTTP e um banco SQLite temporário. Foram usados usuários e dados clínicos fictícios; o banco normal do projeto não foi tocado. O teste verificou cadastro e login de paciente e profissional, criação e confirmação de consulta, gravação e leitura do prontuário e da prescrição, gravação de prontuário sem prescrição, rejeição de detalhes de medicamento sem nome (HTTP 422) e solicitação de exame visível na lista do paciente. A API também devolveu HTTP 503 padronizado na tentativa de ingestão porque OCR/NER não estavam disponíveis. Esse último resultado confirma a resposta de indisponibilidade; não confirma leitura de imagem.
+Em 17/11/2026 foi executado um teste de fluxo básico com um servidor local da API iniciado pelo próprio script, chamadas HTTP e um banco SQLite temporário. Foram usados usuários e dados clínicos fictícios; o banco normal do projeto não foi tocado. O teste verificou health check, preflight CORS do Flutter web na porta 5000, cadastro e login de paciente e profissional, criação e confirmação de consulta, gravação e leitura do prontuário e da prescrição, gravação de prontuário sem prescrição, rejeição de detalhes de medicamento sem nome (HTTP 422) e solicitação de exame visível na lista do paciente. A API também devolveu HTTP 503 padronizado na tentativa de ingestão porque OCR/NER não estavam disponíveis. Esse último resultado confirma a resposta de indisponibilidade; não confirma leitura de imagem.
 
 Reprodução no PowerShell, a partir de `medguide_api`:
 

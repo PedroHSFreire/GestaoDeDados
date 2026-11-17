@@ -23,6 +23,8 @@ Copy-Item .env.example .env
 
 Edite `.env`: gere um segredo aleatório com pelo menos 32 caracteres em `JWT_SECRET`. Não use o valor de exemplo. O arquivo `.env` não deve ser publicado.
 
+O `.env.example` permite as origens locais `http://localhost:5000` e `http://127.0.0.1:5000`, usadas pelo comando de Flutter Web abaixo. Se iniciar o cliente em outra porta, acrescente a origem correspondente a `ALLOWED_ORIGINS`. Em produção, liste somente as origens efetivamente usadas.
+
 Em Linux, instale o Tesseract e os dados de idioma pelo gerenciador da distribuição. Por exemplo, em Debian/Ubuntu:
 
 ```bash

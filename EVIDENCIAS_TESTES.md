@@ -12,8 +12,8 @@ Comando executado em `medguide_api`:
 
 ```text
 python -m pytest -q
-.......                                                                  [100%]
-13 passed, 1 warning in 4.23s
+.............                                                            [100%]
+13 passed, 1 warning in 3.26s
 ```
 
 O aviso é uma depreciação do alias `anyio.abc.BlockingPortal` na integração TestClient/Starlette. Os testes cobrem máscara de identificadores e preservação de conteúdo clínico sintético, detecção de risco residual, aprovação e persistência somente de texto mascarado, falta de consentimento, bloqueio sem persistência, atualização de consulta sem medicação, exigência do nome quando há detalhes de prescrição, retorno de validação legível sem ecoar dados, criação de exame pelo médico com leitura posterior na lista do paciente, atualização do registro clínico com os campos de medicação, UUIDv4, alias legado de rota e envelope padronizado para 404. Nas rotas de documentos, a chamada de OCR é substituída por fixture (mock), logo os testes não exercitam o Tesseract.
@@ -34,6 +34,7 @@ Saída observada:
 
 ```text
 PASS health endpoint HTTP
+PASS CORS preflight para Flutter web na porta 5000
 PASS cadastro e autenticacao HTTP para paciente e profissional
 PASS consulta, gravacao do prontuario e leitura da prescricao pelo paciente
 PASS prontuario sem prescricao; detalhes sem nome retornam validacao 422 padronizada
