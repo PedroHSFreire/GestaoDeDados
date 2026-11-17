@@ -41,20 +41,26 @@ Documentação interativa: `http://127.0.0.1:8000/docs`. A rota `GET /api/health
 
 | Método | Rota | Acesso |
 | --- | --- | --- |
-| `POST` | `/api/pacient/register`, `/api/doctor/register` | público |
-| `POST` | `/api/pacient/login`, `/api/doctor/login` | público |
-| `GET` | `/api/pacient/profile`, `/api/doctor/profile` | usuário correspondente |
-| `PUT` | `/api/pacient/profile`, `/api/doctor/profile` | titular; campos permitidos por perfil |
-| `GET` | `/api/doctor/search`, `/api/doctor/specialties` | autenticado |
+| `POST` | `/api/patients/register`, `/api/doctors/register` | público |
+| `POST` | `/api/patients/login`, `/api/doctors/login` | público |
+| `GET`, `PATCH` | `/api/patients/me`, `/api/doctors/me` | titular; campos permitidos por perfil |
+| `GET` | `/api/doctors/search`, `/api/doctors/specialties` | autenticado |
 | `POST` | `/api/appointments` | paciente autenticado |
-| `GET` | `/api/appointments/mine` | paciente ou profissional autenticado |
-| `PUT` | `/api/appointments/{id}` | titular da consulta; campos limitados por perfil |
-| `GET`, `POST`, `PUT`, `DELETE` | `/api/medications[/{id}]` | CRUD do próprio paciente |
-| `GET` | `/api/exams/mine` | solicitações do paciente ou profissional titular |
+| `GET` | `/api/appointments/me` | paciente ou profissional autenticado |
+| `GET` | `/api/appointments/{id}` | participante da consulta |
+| `PATCH` | `/api/appointments/{id}` | titular da consulta; campos limitados por perfil |
+| `GET`, `POST` | `/api/medications` | CRUD do próprio paciente |
+| `PATCH`, `DELETE` | `/api/medications/{id}` | titular do medicamento |
+| `GET` | `/api/medications/prescribed` | paciente; medicamentos prescritos no próprio histórico clínico |
+| `GET` | `/api/exams/me` | solicitações do paciente ou profissional titular |
 | `POST` | `/api/exams` | profissional com consulta vinculada ao paciente |
-| `PUT` | `/api/exams/{id}` | profissional responsável; paciente pode cancelar enquanto pendente |
+| `PATCH` | `/api/exams/{id}` | profissional responsável; paciente pode cancelar enquanto pendente |
 | `POST` | `/api/privacy/ingest?document_type=receita` | paciente autenticado e consentimento explícito |
 | `GET` | `/api/privacy/documents` | paciente autenticado; somente textos mascarados |
+
+IDs de usuários, consultas, medicamentos, exames e documentos são UUID versão 4 gerados por `uuid4()`. As rotas antigas `/api/pacient/*` e `/api/doctor/*`, além de `/mine` e métodos `PUT` usados anteriormente para atualizações parciais, continuam disponíveis como aliases de compatibilidade; a documentação OpenAPI publica as formas canônicas acima.
+
+Respostas de erro usam `{ "success": false, "error": { "code", "message", "action", "request_id" } }`. A API atribui `X-Request-ID` e registra timestamp, código, rota, método, usuário autenticado quando disponível e contexto seguro. Valores de formulário, texto clínico e conteúdo da requisição não entram nesses logs.
 
 ## Pipeline de ingestão
 
@@ -64,7 +70,7 @@ Documentação interativa: `http://127.0.0.1:8000/docs`. A rota `GET /api/health
 4. O Gatekeeper reanalisa o texto mascarado e calcula um indicador heurístico de risco residual. Baixa confiança de OCR exige revisão; risco acima de `MAX_RESIDUAL_RISK` bloqueia a persistência.
 5. A tabela `protected_documents` recebe apenas `masked_text`, o tipo e metadados mínimos do processamento. Imagem original e texto OCR bruto não são escritos no banco nem nos logs. Saídas bloqueadas ou para revisão não são persistidas.
 
-## Limites do protótipo
+## Limites conhecidos
 
 O escore do Gatekeeper é uma heurística demonstrativa, não uma medida legal ou estatística validada de anonimização. NER e OCR podem omitir identificadores ou mascarar conteúdo clínico; a preservação de medicamentos inclui uma regra contextual que requer avaliação com documentos representativos. A pseudonimização/mascaramento não elimina risco de reidentificação. Use somente material fictício e não empregue esta versão em atendimento ou com documentos reais.
 
