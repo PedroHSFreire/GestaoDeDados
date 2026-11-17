@@ -16,11 +16,11 @@ class AuthViewModel extends ChangeNotifier {
     final token = await api.readToken();
     if (token == null) return;
     try {
-      final profile = await api.get<Map<String, dynamic>>('/api/pacient/profile');
+      final profile = await api.get<Map<String, dynamic>>('/api/patients/me');
       user = AppUser.fromJson(profile.data!['data'] as Map<String, dynamic>);
     } catch (_) {
       try {
-        final profile = await api.get<Map<String, dynamic>>('/api/doctor/profile');
+        final profile = await api.get<Map<String, dynamic>>('/api/doctors/me');
         user = AppUser.fromJson(profile.data!['data'] as Map<String, dynamic>);
       } catch (_) {
         await api.clearToken();
@@ -32,7 +32,7 @@ class AuthViewModel extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
-    final route = role == 'doctor' ? '/api/doctor/login' : '/api/pacient/login';
+    final route = role == 'doctor' ? '/api/doctors/login' : '/api/patients/login';
     try {
       final response = await api.post<Map<String, dynamic>>(route, data: {
         'login': login.trim(),
@@ -62,7 +62,7 @@ class AuthViewModel extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
-    final path = role == 'doctor' ? '/api/doctor/register' : '/api/pacient/register';
+    final path = role == 'doctor' ? '/api/doctors/register' : '/api/patients/register';
     try {
       final payload = <String, dynamic>{'name': name.trim(), 'email': email.trim(), 'password': password};
       if (role == 'doctor') {
@@ -91,8 +91,8 @@ class AuthViewModel extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final path = user!.isDoctor ? '/api/doctor/profile' : '/api/pacient/profile';
-      final response = await api.put<Map<String, dynamic>>(path, data: changes);
+      final path = user!.isDoctor ? '/api/doctors/me' : '/api/patients/me';
+      final response = await api.patch<Map<String, dynamic>>(path, data: changes);
       user = AppUser.fromJson(response.data!['data'] as Map<String, dynamic>);
       return true;
     } catch (exception) {

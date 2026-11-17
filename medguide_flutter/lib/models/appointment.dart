@@ -13,6 +13,11 @@ class Appointment {
     this.notes,
     this.diagnosis,
     this.prescription,
+    this.medicationName,
+    this.medicationDosage,
+    this.medicationFrequency,
+    this.medicationDuration,
+    this.medicationNotes,
     this.doctorNotes,
   });
 
@@ -29,6 +34,11 @@ class Appointment {
   final String? notes;
   final String? diagnosis;
   final String? prescription;
+  final String? medicationName;
+  final String? medicationDosage;
+  final String? medicationFrequency;
+  final String? medicationDuration;
+  final String? medicationNotes;
   final String? doctorNotes;
 
   factory Appointment.fromJson(Map<String, dynamic> json) => Appointment(
@@ -45,6 +55,11 @@ class Appointment {
         notes: json['notes'] as String?,
         diagnosis: json['diagnosis'] as String?,
         prescription: json['prescription'] as String?,
+        medicationName: json['medication_name'] as String?,
+        medicationDosage: json['medication_dosage'] as String?,
+        medicationFrequency: json['medication_frequency'] as String?,
+        medicationDuration: json['medication_duration'] as String?,
+        medicationNotes: json['medication_notes'] as String?,
         doctorNotes: json['doctor_notes'] as String?,
       );
 }

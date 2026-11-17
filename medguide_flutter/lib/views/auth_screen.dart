@@ -65,7 +65,7 @@ class _AuthScreenState extends State<AuthScreen> {
             _HelpEntry(question: 'Como agendo uma consulta?', answer: 'Após entrar como paciente, abra Consultas, localize um profissional e escolha Agendar.'),
             _HelpEntry(question: 'Como organizo meus medicamentos?', answer: 'Na área do paciente, cadastre medicamentos e horários para consultá-los no app. Notificações do sistema não fazem parte desta versão.'),
             _HelpEntry(question: 'Como funciona o processamento de documentos?', answer: 'O envio requer consentimento. A API limpa metadados, extrai texto e mascara identificadores antes de aprovar armazenamento. OCR exige Tesseract instalado.'),
-            _HelpEntry(question: 'Posso usar documentos reais?', answer: 'Não. Este é um protótipo acadêmico: o OCR e o mascaramento podem falhar e não constituem anonimização validada.'),
+            _HelpEntry(question: 'Posso usar documentos reais?', answer: 'Use apenas documentos fictícios ou devidamente autorizados neste ambiente. A leitura e a detecção automática podem falhar e precisam de validação humana.'),
           ]),
         ),
         actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Fechar'))],
@@ -95,15 +95,20 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Icon(Icons.health_and_safety, size: 52, color: Color(0xFF087E8B)),
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(color: const Color(0xFFE7F4F2), borderRadius: BorderRadius.circular(22)),
+                              child: const Icon(Icons.health_and_safety, size: 42, color: Color(0xFF087E8B)),
+                            ),
                             const SizedBox(height: 8),
                             Text(_registering ? 'Criar conta MedGuide' : 'Bem-vindo ao MedGuide',
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                             const SizedBox(height: 4),
-                            Text('Acompanhamento de saúde com cuidado e privacidade.',
+                            Text('Cuidado conectado, com privacidade em cada etapa.',
                                 textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 22),
                             DropdownButtonFormField<String>(
                               initialValue: _role,
                               decoration: const InputDecoration(labelText: 'Perfil'),

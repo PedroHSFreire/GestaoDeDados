@@ -14,6 +14,11 @@ class MedicationsScreen extends StatefulWidget {
 class _MedicationsScreenState extends State<MedicationsScreen> {
   bool _loaded = false;
 
+  String _formatDate(DateTime value) {
+    final date = value.toLocal();
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -85,6 +90,9 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                     ? await model.create(name: name.text.trim(), dosage: dosage.text.trim().isEmpty ? null : dosage.text.trim(), times: times)
                     : await model.update(existing, {'name': name.text.trim(), 'dosage': dosage.text.trim(), 'times': times});
                 if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(model.error ?? 'Não foi possível salvar o medicamento. Tente novamente.')));
+                }
               },
               child: const Text('Salvar'),
             ),
@@ -109,15 +117,47 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
             FilledButton.tonalIcon(onPressed: () => _edit(model), icon: const Icon(Icons.add), label: const Text('Adicionar')),
           ]),
           const SizedBox(height: 6),
-          const Text('Cadastre medicamentos, doses e horários para consultar sua rotina.'),
+          const Text('Veja as prescrições registradas nas consultas e organize sua rotina de medicamentos.'),
           const SizedBox(height: 16),
           if (model.error != null) Card(color: Colors.red.shade50, child: Padding(padding: const EdgeInsets.all(14), child: Text(model.error!))),
           if (model.loading)
             const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
-          else if (model.medications.isEmpty)
-            const Card(child: Padding(padding: EdgeInsets.all(24), child: Text('Você ainda não cadastrou medicamentos.')))
-          else
-            ...model.medications.map((medication) => Card(
+          else ...[
+            Text('Prescritos nas consultas', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            if (model.prescribedMedications.isEmpty)
+              const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('Nenhuma medicação foi prescrita nas consultas.')))
+            else
+              ...model.prescribedMedications.map((prescription) => Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Row(children: [
+                          const CircleAvatar(child: Icon(Icons.medication_outlined)),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(prescription.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
+                        ]),
+                        const SizedBox(height: 10),
+                        if (prescription.dosage?.isNotEmpty == true) Text('Dosagem: ${prescription.dosage}'),
+                        if (prescription.frequency?.isNotEmpty == true) Text('Frequência: ${prescription.frequency}'),
+                        if (prescription.duration?.isNotEmpty == true) Text('Duração: ${prescription.duration}'),
+                        if (prescription.notes?.isNotEmpty == true) Text('Orientações: ${prescription.notes}'),
+                        const SizedBox(height: 6),
+                        Text('Consulta de ${_formatDate(prescription.appointmentDate)}${prescription.doctorName?.isNotEmpty == true ? ' · ${prescription.doctorName}' : ''}', style: Theme.of(context).textTheme.bodySmall),
+                        const SizedBox(height: 8),
+                        const Text('Registrado pelo profissional. Para alterar a prescrição, entre em contato com a equipe responsável.', style: TextStyle(fontSize: 12)),
+                      ]),
+                    ),
+                  )),
+            const SizedBox(height: 20),
+            Text('Minha rotina', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            const Text('Cadastre horários para consultar sua rotina pessoal.'),
+            const SizedBox(height: 8),
+            if (model.medications.isEmpty)
+              const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('Você ainda não cadastrou medicamentos na sua rotina.')))
+            else
+              ...model.medications.map((medication) => Card(
                   child: ListTile(
                     leading: const CircleAvatar(child: Icon(Icons.medication_outlined)),
                     title: Text(medication.name),
@@ -130,7 +170,10 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                     trailing: PopupMenuButton<String>(
                       onSelected: (action) async {
                         if (action == 'toggle') {
-                          await model.update(medication, {'active': !medication.active});
+                          final ok = await model.update(medication, {'active': !medication.active});
+                          if (!ok && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(model.error ?? 'Não foi possível atualizar o medicamento. Tente novamente.')));
+                          }
                         } else if (action == 'edit') {
                           await _edit(model, medication);
                         } else if (action == 'delete' && context.mounted) {
@@ -145,7 +188,12 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                               ],
                             ),
                           );
-                          if (confirm == true) await model.delete(medication);
+                          if (confirm == true) {
+                            final ok = await model.delete(medication);
+                            if (!ok && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(model.error ?? 'Não foi possível remover o medicamento. Tente novamente.')));
+                            }
+                          }
                         }
                       },
                       itemBuilder: (_) => [
@@ -156,6 +204,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                     ),
                   ),
                 )),
+          ],
         ],
       ),
     );

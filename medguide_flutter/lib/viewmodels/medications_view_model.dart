@@ -9,6 +9,7 @@ class MedicationsViewModel extends ChangeNotifier {
   final MedicationService service;
 
   List<Medication> medications = [];
+  List<PrescribedMedication> prescribedMedications = [];
   bool loading = false;
   String? error;
 
@@ -17,7 +18,9 @@ class MedicationsViewModel extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      medications = await service.list();
+      final results = await Future.wait([service.list(), service.prescribed()]);
+      medications = results[0] as List<Medication>;
+      prescribedMedications = results[1] as List<PrescribedMedication>;
     } catch (exception) {
       error = ApiClient.messageFor(exception);
     } finally {

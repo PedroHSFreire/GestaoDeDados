@@ -109,6 +109,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   }
                   final ok = await model.create(doctorId: doctorId, dateTime: dateTime, type: appointmentType, symptoms: symptoms.text.trim(), notes: notes.text.trim().isEmpty ? null : notes.text.trim());
                   if (ok && sheetContext.mounted) Navigator.of(sheetContext).pop();
+                  if (!ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(model.error ?? 'Não foi possível agendar a consulta. Tente novamente.')));
+                  }
                 },
                 child: const Text('Enviar solicitação'),
               ),
@@ -123,18 +126,33 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
   Future<void> _editClinicalRecord(Appointment appointment, AppointmentsViewModel model) async {
     final diagnosis = TextEditingController(text: appointment.diagnosis ?? '');
-    final prescription = TextEditingController(text: appointment.prescription ?? '');
+    final medicationName = TextEditingController(text: appointment.medicationName ?? '');
+    final medicationDosage = TextEditingController(text: appointment.medicationDosage ?? '');
+    final medicationFrequency = TextEditingController(text: appointment.medicationFrequency ?? '');
+    final medicationDuration = TextEditingController(text: appointment.medicationDuration ?? '');
+    final medicationNotes = TextEditingController(text: appointment.medicationNotes ?? '');
     final doctorNotes = TextEditingController(text: appointment.doctorNotes ?? '');
+    final messenger = ScaffoldMessenger.of(context);
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Prontuário da consulta'),
+        title: const Text('Registro clínico'),
         content: SizedBox(
           width: 460,
           child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(controller: diagnosis, maxLines: 3, decoration: const InputDecoration(labelText: 'Diagnóstico')),
             const SizedBox(height: 12),
-            TextField(controller: prescription, maxLines: 3, decoration: const InputDecoration(labelText: 'Prescrição')),
+            Align(alignment: Alignment.centerLeft, child: Text('Prescrição de medicação (opcional)', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))),
+            const SizedBox(height: 8),
+            TextFormField(controller: medicationName, decoration: const InputDecoration(labelText: 'Medicamento')),
+            const SizedBox(height: 10),
+            TextFormField(controller: medicationDosage, decoration: const InputDecoration(labelText: 'Dosagem')),
+            const SizedBox(height: 10),
+            TextFormField(controller: medicationFrequency, decoration: const InputDecoration(labelText: 'Frequência')),
+            const SizedBox(height: 10),
+            TextFormField(controller: medicationDuration, decoration: const InputDecoration(labelText: 'Duração')),
+            const SizedBox(height: 10),
+            TextFormField(controller: medicationNotes, maxLines: 2, decoration: const InputDecoration(labelText: 'Orientações / observações')),
             const SizedBox(height: 12),
             TextField(controller: doctorNotes, maxLines: 3, decoration: const InputDecoration(labelText: 'Observações do profissional')),
           ])),
@@ -143,12 +161,29 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
           FilledButton(
             onPressed: () async {
+              final medicationDetails = [medicationDosage, medicationFrequency, medicationDuration, medicationNotes]
+                  .any((field) => field.text.trim().isNotEmpty);
+              if (medicationDetails && medicationName.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Informe o nome do medicamento ou limpe os campos da prescrição.')));
+                return;
+              }
               final ok = await model.update(appointment.id, {
                 'diagnosis': diagnosis.text.trim(),
-                'prescription': prescription.text.trim(),
+                'prescription': '',
+                'medication_name': medicationName.text.trim(),
+                'medication_dosage': medicationDosage.text.trim(),
+                'medication_frequency': medicationFrequency.text.trim(),
+                'medication_duration': medicationDuration.text.trim(),
+                'medication_notes': medicationNotes.text.trim(),
                 'doctor_notes': doctorNotes.text.trim(),
               }, patient: false);
-              if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+              if (ok && mounted && dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+                messenger.showSnackBar(const SnackBar(content: Text('Prontuário salvo e consulta atualizada.')));
+              }
+              if (!ok && dialogContext.mounted) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text(model.error ?? 'Não foi possível salvar o registro clínico. Tente novamente.')));
+              }
             },
             child: const Text('Salvar prontuário'),
           ),
@@ -156,7 +191,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       ),
     );
     diagnosis.dispose();
-    prescription.dispose();
+    medicationName.dispose();
+    medicationDosage.dispose();
+    medicationFrequency.dispose();
+    medicationDuration.dispose();
+    medicationNotes.dispose();
     doctorNotes.dispose();
   }
 
@@ -165,6 +204,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     final examType = TextEditingController();
     final description = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final messenger = ScaffoldMessenger.of(context);
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -186,7 +226,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
               final ok = await model.create(patientId: appointment.patientId!, examType: examType.text.trim(), description: description.text.trim());
-              if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+              if (ok && mounted && dialogContext.mounted) {
+                Navigator.pop(dialogContext);
+                messenger.showSnackBar(const SnackBar(content: Text('Solicitação de exame enviada ao paciente.')));
+              }
+              if (!ok && dialogContext.mounted) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text(model.error ?? 'Não foi possível solicitar o exame. Tente novamente.')));
+              }
             },
             child: const Text('Enviar solicitação'),
           ),
@@ -251,7 +297,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             if (widget.patient && _patientTab == 1) FilledButton.tonalIcon(onPressed: model.loading ? null : () => _newAppointment(model), icon: const Icon(Icons.add), label: const Text('Agendar')),
           ]),
           const SizedBox(height: 6),
-          Text(widget.patient ? 'Encontre profissionais e acompanhe suas consultas.' : 'Gerencie consultas e prontuários do seu perfil.'),
+          Text(widget.patient ? 'Encontre profissionais e acompanhe suas consultas.' : 'Gerencie consultas e registros clínicos dos pacientes.'),
           const SizedBox(height: 16),
           if (widget.patient)
             SegmentedButton<int>(
@@ -328,6 +374,14 @@ class _AppointmentCard extends StatelessWidget {
             if (appointment.notes?.isNotEmpty == true) Text('Observações: ${appointment.notes}'),
             if (appointment.diagnosis?.isNotEmpty == true) Text('Diagnóstico: ${appointment.diagnosis}'),
             if (appointment.prescription?.isNotEmpty == true) Text('Prescrição: ${appointment.prescription}'),
+            if (appointment.medicationName?.isNotEmpty == true) ...[
+              const Divider(height: 22),
+              Text('Medicação prescrita: ${appointment.medicationName}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              if (appointment.medicationDosage?.isNotEmpty == true) Text('Dosagem: ${appointment.medicationDosage}'),
+              if (appointment.medicationFrequency?.isNotEmpty == true) Text('Frequência: ${appointment.medicationFrequency}'),
+              if (appointment.medicationDuration?.isNotEmpty == true) Text('Duração: ${appointment.medicationDuration}'),
+              if (appointment.medicationNotes?.isNotEmpty == true) Text('Orientações: ${appointment.medicationNotes}'),
+            ],
             if (appointment.doctorNotes?.isNotEmpty == true) Text('Observações do profissional: ${appointment.doctorNotes}'),
             const SizedBox(height: 10),
             Wrap(spacing: 8, runSpacing: 4, children: [

@@ -6,13 +6,13 @@ class AppointmentService {
   final ApiClient api;
 
   Future<List<Appointment>> mine() async {
-    final response = await api.get<Map<String, dynamic>>('/api/appointments/mine');
+    final response = await api.get<Map<String, dynamic>>('/api/appointments/me');
     final data = response.data?['data'] as List<dynamic>? ?? const [];
     return data.map((item) => Appointment.fromJson(item as Map<String, dynamic>)).toList();
   }
 
   Future<List<DoctorSummary>> doctors() async {
-    final response = await api.get<Map<String, dynamic>>('/api/doctor/search');
+    final response = await api.get<Map<String, dynamic>>('/api/doctors/search');
     final data = response.data?['data'] as List<dynamic>? ?? const [];
     return data.map((item) => DoctorSummary.fromJson(item as Map<String, dynamic>)).toList();
   }
@@ -28,6 +28,6 @@ class AppointmentService {
   }
 
   Future<void> update(String id, Map<String, dynamic> changes) async {
-    await api.put('/api/appointments/$id', data: changes);
+    await api.patch('/api/appointments/$id', data: changes);
   }
 }

@@ -49,7 +49,7 @@ O `pubspec.yaml` registra as dependências do cliente, inclusive `image_picker`,
 - Cadastro e login por perfil, restauração da sessão, edição de perfil e encerramento de sessão.
 - Busca de profissionais por nome/especialidade e agendamento pelo paciente com tipo, data, horário, motivo e observações.
 - Filtro de consultas por situação; paciente pode cancelar e profissional pode confirmar, recusar, concluir e salvar diagnóstico, prescrição e observações do prontuário.
-- CRUD de medicamentos por paciente: dose, vários horários, pausa/reativação e remoção. Os horários ficam salvos para consulta; notificações do sistema não são simuladas.
+- CRUD de medicamentos por paciente: dose, vários horários, pausa/reativação e remoção. A aba também mostra, separadamente, as prescrições registradas pelo profissional nas consultas. Os horários ficam salvos para consulta; notificações do sistema não são simuladas.
 - Solicitações de exames persistidas: o profissional cria a partir de uma consulta vinculada, acompanha e conclui/cancela; o paciente consulta e pode cancelar enquanto pendente.
 - Dúvidas frequentes acessíveis antes e depois do login.
 - Seleção/captura de receitas, exames ou laudos; consentimento explícito; pré-processamento sem metadados; resultado mascarado/bloqueado e lista de textos protegidos.

@@ -80,6 +80,9 @@ class _DashboardScaffoldState extends State<_DashboardScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final isPatient = !widget.userIsDoctor;
+    final areaColor = isPatient ? const Color(0xFF087E8B) : const Color(0xFF465AA8);
+    final areaBackground = isPatient ? const Color(0xFFE4F3F2) : const Color(0xFFECEFFD);
     final patient = !widget.userIsDoctor;
     final pages = <Widget>[
       AppointmentsScreen(patient: patient),
@@ -101,7 +104,17 @@ class _DashboardScaffoldState extends State<_DashboardScaffold> {
         title: Row(children: [
           const Icon(Icons.health_and_safety, color: Color(0xFF087E8B)),
           const SizedBox(width: 10),
-          Text(widget.userIsDoctor ? 'MedGuide Profissional' : 'MedGuide Saúde'),
+          const Flexible(child: Text('MedGuide')),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+            decoration: BoxDecoration(color: areaBackground, borderRadius: BorderRadius.circular(30)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(isPatient ? Icons.person_outline : Icons.medical_services_outlined, size: 17, color: areaColor),
+              const SizedBox(width: 6),
+              Text(isPatient ? 'Área do Paciente' : 'Área do Médico', style: TextStyle(color: areaColor, fontSize: 13, fontWeight: FontWeight.w700)),
+            ]),
+          ),
         ]),
         actions: [
           IconButton(
@@ -116,7 +129,7 @@ class _DashboardScaffoldState extends State<_DashboardScaffold> {
                     _FaqItem(question: 'Como agendo uma consulta?', answer: 'Na aba Consultas, toque em Agendar, selecione o profissional, a modalidade, data, horário e informe o motivo.'),
                     _FaqItem(question: 'Como organizo medicamentos?', answer: 'Cadastre o medicamento, dose e horários na aba Medicamentos. Nesta versão os horários ficam salvos para consulta, sem notificações do sistema.'),
                     _FaqItem(question: 'Como processo uma receita ou exame?', answer: 'Na aba Documentos, selecione uma imagem e confirme o consentimento. OCR real requer que a API tenha Tesseract e os idiomas configurados.'),
-                    _FaqItem(question: 'Meus dados ficam seguros?', answer: 'A sessão usa token da API. Documentos só são armazenados depois do mascaramento e da decisão de aprovação; o protótipo não deve receber documentos reais.'),
+                    _FaqItem(question: 'Como os documentos são tratados?', answer: 'A sessão usa token da API. Somente o texto mascarado aprovado é armazenado. Use documentos fictícios ou autorizados e revise os resultados automáticos.'),
                   ]),
                 ),
                 actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Fechar'))],
@@ -135,7 +148,15 @@ class _DashboardScaffoldState extends State<_DashboardScaffold> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         destinations: destinations,
-        onDestinationSelected: (index) => setState(() => _index = index),
+        onDestinationSelected: (index) {
+          setState(() => _index = index);
+          if (destinations[index].label == 'Exames') {
+            context.read<ExamRequestsViewModel>().load();
+          }
+          if (destinations[index].label == 'Medicamentos') {
+            context.read<MedicationsViewModel>().load();
+          }
+        },
       ),
     );
   }

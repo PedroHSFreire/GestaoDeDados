@@ -42,7 +42,7 @@ class _DocumentIngestionScreenState extends State<DocumentIngestionScreen> {
       if (image != null && mounted) await model.processImage(image, _documentType);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível abrir a imagem.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível acessar a imagem. Verifique o formato e as permissões e tente novamente.')));
       }
     }
   }
@@ -66,7 +66,7 @@ class _DocumentIngestionScreenState extends State<DocumentIngestionScreen> {
               SizedBox(height: 8),
               Text('O aplicativo reprocessa os pixels da imagem antes do envio para remover metadados EXIF. A API faz OCR, NER e mascaramento em memória. Apenas o texto aprovado e mascarado pode ser gravado; a imagem original e o texto bruto não são armazenados.'),
               SizedBox(height: 8),
-              Text('Este é um protótipo acadêmico. Revise o texto mascarado e não envie documentos reais sem autorização institucional.', style: TextStyle(fontWeight: FontWeight.w600)),
+              Text('Utilize apenas documentos autorizados e revise cuidadosamente o texto mascarado. A detecção automática pode falhar e não substitui a análise profissional.', style: TextStyle(fontWeight: FontWeight.w600)),
             ]),
           ),
         ),

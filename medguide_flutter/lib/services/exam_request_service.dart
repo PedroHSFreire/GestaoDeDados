@@ -6,7 +6,7 @@ class ExamRequestService {
   final ApiClient api;
 
   Future<List<ExamRequest>> listMine() async {
-    final response = await api.get<Map<String, dynamic>>('/api/exams/mine');
+    final response = await api.get<Map<String, dynamic>>('/api/exams/me');
     final data = response.data?['data'] as List<dynamic>? ?? const [];
     return data.map((item) => ExamRequest.fromJson(item as Map<String, dynamic>)).toList();
   }
@@ -16,6 +16,6 @@ class ExamRequestService {
   }
 
   Future<void> update(String id, String status) async {
-    await api.put('/api/exams/$id', data: {'status': status});
+    await api.patch('/api/exams/$id', data: {'status': status});
   }
 }
