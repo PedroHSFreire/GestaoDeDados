@@ -15,7 +15,8 @@ def _rows(query: str, values: tuple):
         return [dict(row) for row in db.execute(query, values).fetchall()]
 
 
-@router.get("/mine")
+@router.get("/mine", deprecated=True, include_in_schema=False)
+@router.get("/me")
 def list_my_appointments(user: Annotated[dict, Depends(current_user)]):
     if user["role"] == "patient":
         query = """SELECT a.*, d.name AS doctor_name, d.specialty FROM appointments a
@@ -57,7 +58,8 @@ def get_appointment(appointment_id: str, user: Annotated[dict, Depends(current_u
     return {"success": True, "data": dict(row)}
 
 
-@router.put("/{appointment_id}")
+@router.put("/{appointment_id}", deprecated=True, include_in_schema=False)
+@router.patch("/{appointment_id}")
 def update_appointment(appointment_id: str, payload: AppointmentUpdate, user: Annotated[dict, Depends(current_user)]):
     changes = payload.model_dump(exclude_unset=True, exclude_none=True)
     with transaction() as db:
@@ -72,7 +74,11 @@ def update_appointment(appointment_id: str, payload: AppointmentUpdate, user: An
                 raise HTTPException(status.HTTP_403_FORBIDDEN, "Ação não permitida")
             if not changes:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, "Nenhuma alteração informada")
-        allowed = {"status", "diagnosis", "prescription", "doctor_notes"}
+        allowed = {
+            "status", "diagnosis", "prescription", "doctor_notes",
+            "medication_name", "medication_dosage", "medication_frequency",
+            "medication_duration", "medication_notes",
+        }
         if not changes.keys() <= allowed:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Campos de atualização inválidos")
         assignments = ", ".join(f"{key} = ?" for key in changes)

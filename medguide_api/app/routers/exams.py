@@ -11,7 +11,8 @@ from app.security import current_user, new_id
 router = APIRouter(prefix="/api/exams", tags=["Solicitações de exames"])
 
 
-@router.get("/mine")
+@router.get("/mine", deprecated=True, include_in_schema=False)
+@router.get("/me")
 def list_my_exam_requests(user: Annotated[dict, Depends(current_user)]):
     if user["role"] == "patient":
         query = """SELECT e.*, d.name AS doctor_name FROM exam_requests e
@@ -50,7 +51,8 @@ def create_exam_request(payload: ExamRequestCreate, user: Annotated[dict, Depend
     return {"success": True, "data": dict(row)}
 
 
-@router.put("/{request_id}")
+@router.put("/{request_id}", deprecated=True, include_in_schema=False)
+@router.patch("/{request_id}")
 def update_exam_request(
     request_id: str,
     payload: ExamRequestUpdate,

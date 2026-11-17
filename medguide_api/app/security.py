@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import uuid4
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pwdlib import PasswordHash
 
@@ -33,6 +33,7 @@ def new_id() -> str:
 
 def current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+    request: Request,
 ) -> dict[str, str]:
     if credentials is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Autenticação necessária")
@@ -41,6 +42,7 @@ def current_user(
         user_id, role = payload.get("sub"), payload.get("role")
         if not user_id or role not in {"patient", "doctor"}:
             raise ValueError("token claims invalid")
+        request.state.user_id = user_id
         return {"id": user_id, "role": role}
     except (jwt.InvalidTokenError, ValueError):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido ou expirado") from None

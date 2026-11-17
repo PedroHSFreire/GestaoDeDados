@@ -1,4 +1,11 @@
+import json
+import logging
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+logger = logging.getLogger("medguide.api")
 
 
 class InMemoryUploadLimitMiddleware:
@@ -17,10 +24,10 @@ class InMemoryUploadLimitMiddleware:
         if content_length:
             try:
                 if int(content_length) > self.max_bytes:
-                    await self._too_large(send)
+                    await self._too_large(send, scope)
                     return
             except ValueError:
-                await self._too_large(send)
+                await self._too_large(send, scope)
                 return
 
         buffered = bytearray()
@@ -29,7 +36,7 @@ class InMemoryUploadLimitMiddleware:
             message = await receive()
             buffered.extend(message.get("body", b""))
             if len(buffered) > self.max_bytes:
-                await self._too_large(send)
+                await self._too_large(send, scope)
                 return
             more = message.get("more_body", False)
 
@@ -45,7 +52,28 @@ class InMemoryUploadLimitMiddleware:
 
         await self.app(scope, replay, send)
 
-    async def _too_large(self, send: Send) -> None:
-        body = b'{"detail":"Arquivo excede o limite de tamanho configurado"}'
-        await send({"type": "http.response.start", "status": 413, "headers": [(b"content-type", b"application/json")]})
+    async def _too_large(self, send: Send, scope: Scope) -> None:
+        request_id = str(uuid4())
+        body = json.dumps({
+            "success": False,
+            "error": {
+                "code": "REQUEST_TOO_LARGE",
+                "message": "O arquivo excede o tamanho permitido.",
+                "action": "Escolha um arquivo menor.",
+                "request_id": request_id,
+            },
+        }).encode("utf-8")
+        logger.warning(json.dumps({
+            "timestamp": datetime.now(UTC).isoformat(),
+            "code": "REQUEST_TOO_LARGE",
+            "request_id": request_id,
+            "method": scope.get("method"),
+            "route": scope.get("path"),
+            "user_id": None,
+        }))
+        await send({
+            "type": "http.response.start",
+            "status": 413,
+            "headers": [(b"content-type", b"application/json"), (b"x-request-id", request_id.encode("ascii"))],
+        })
         await send({"type": "http.response.body", "body": body})

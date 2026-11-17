@@ -33,6 +33,11 @@ CREATE TABLE IF NOT EXISTS appointments (
     status TEXT NOT NULL DEFAULT 'agendada',
     diagnosis TEXT,
     prescription TEXT,
+    medication_name TEXT,
+    medication_dosage TEXT,
+    medication_frequency TEXT,
+    medication_duration TEXT,
+    medication_notes TEXT,
     doctor_notes TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -94,7 +99,7 @@ def transaction() -> Iterator[sqlite3.Connection]:
 def initialize_database() -> None:
     with transaction() as connection:
         connection.executescript(SCHEMA)
-        # Additive migration keeps user accounts created by earlier prototype versions.
+        # Additive migrations preserve existing account and consultation history.
         existing = {row["name"] for row in connection.execute("PRAGMA table_info(users)")}
         for column, sql_type in {
             "phone": "TEXT",
@@ -108,3 +113,6 @@ def initialize_database() -> None:
         appointment_columns = {row["name"] for row in connection.execute("PRAGMA table_info(appointments)")}
         if "notes" not in appointment_columns:
             connection.execute("ALTER TABLE appointments ADD COLUMN notes TEXT")
+        for column in ("medication_name", "medication_dosage", "medication_frequency", "medication_duration", "medication_notes"):
+            if column not in appointment_columns:
+                connection.execute(f"ALTER TABLE appointments ADD COLUMN {column} TEXT")

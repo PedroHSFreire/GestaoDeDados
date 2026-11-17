@@ -35,6 +35,24 @@ def list_medications(user: Annotated[dict, Depends(require_role("patient"))]):
     return {"success": True, "data": [_public(row) for row in rows]}
 
 
+@router.get("/prescribed")
+def list_prescribed_medications(user: Annotated[dict, Depends(require_role("patient"))]):
+    """Return medication prescriptions recorded in the patient's clinical history."""
+    with transaction() as db:
+        rows = db.execute(
+            """SELECT a.id, a.date_time, a.status AS appointment_status,
+                      a.medication_name, a.medication_dosage, a.medication_frequency,
+                      a.medication_duration, a.medication_notes, d.name AS doctor_name
+               FROM appointments a
+               JOIN users d ON d.id = a.doctor_id
+               WHERE a.patient_id = ? AND a.medication_name IS NOT NULL
+                     AND trim(a.medication_name) <> ''
+               ORDER BY a.date_time DESC""",
+            (user["id"],),
+        ).fetchall()
+    return {"success": True, "data": [dict(row) for row in rows]}
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_medication(
     payload: MedicationCreate,
@@ -56,7 +74,8 @@ def create_medication(
     return {"success": True, "data": _public(row)}
 
 
-@router.put("/{medication_id}")
+@router.put("/{medication_id}", deprecated=True, include_in_schema=False)
+@router.patch("/{medication_id}")
 def update_medication(
     medication_id: str,
     payload: MedicationUpdate,

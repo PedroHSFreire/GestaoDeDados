@@ -34,12 +34,14 @@ def _register(payload: PatientRegister, role: str, crm: str | None = None, speci
     return {"success": True, "data": {"user": _public_user(row)}}
 
 
-@router.post("/api/pacient/register", status_code=status.HTTP_201_CREATED)
+@router.post("/api/pacient/register", status_code=status.HTTP_201_CREATED, deprecated=True, include_in_schema=False)
+@router.post("/api/patients/register", status_code=status.HTTP_201_CREATED)
 def register_patient(payload: PatientRegister):
     return _register(payload, "patient")
 
 
-@router.post("/api/doctor/register", status_code=status.HTTP_201_CREATED)
+@router.post("/api/doctor/register", status_code=status.HTTP_201_CREATED, deprecated=True, include_in_schema=False)
+@router.post("/api/doctors/register", status_code=status.HTTP_201_CREATED)
 def register_doctor(payload: DoctorRegister):
     return _register(payload, "doctor", payload.crm.strip(), payload.specialty.strip())
 
@@ -58,22 +60,27 @@ def _login(payload: LoginRequest, role: str):
     }
 
 
-@router.post("/api/pacient/login")
+@router.post("/api/pacient/login", deprecated=True, include_in_schema=False)
+@router.post("/api/patients/login")
 def login_patient(payload: LoginRequest):
     return _login(payload, "patient")
 
 
-@router.post("/api/doctor/login")
+@router.post("/api/doctor/login", deprecated=True, include_in_schema=False)
+@router.post("/api/doctors/login")
 def login_doctor(payload: LoginRequest):
     return _login(payload, "doctor")
 
 
-@router.get("/api/pacient/profile")
+@router.get("/api/pacient/profile", deprecated=True, include_in_schema=False)
+@router.get("/api/patients/me")
 def patient_profile(user: Annotated[dict, Depends(require_role("patient"))]):
     return _profile(user["id"])
 
 
-@router.put("/api/pacient/profile")
+@router.put("/api/pacient/profile", deprecated=True, include_in_schema=False)
+@router.put("/api/patients/me", deprecated=True, include_in_schema=False)
+@router.patch("/api/patients/me")
 def update_patient_profile(
     payload: ProfileUpdate,
     user: Annotated[dict, Depends(require_role("patient"))],
@@ -81,12 +88,15 @@ def update_patient_profile(
     return _update_profile(user["id"], payload, allowed={"name", "email", "phone", "address"})
 
 
-@router.get("/api/doctor/profile")
+@router.get("/api/doctor/profile", deprecated=True, include_in_schema=False)
+@router.get("/api/doctors/me")
 def doctor_profile(user: Annotated[dict, Depends(require_role("doctor"))]):
     return _profile(user["id"])
 
 
-@router.put("/api/doctor/profile")
+@router.put("/api/doctor/profile", deprecated=True, include_in_schema=False)
+@router.put("/api/doctors/me", deprecated=True, include_in_schema=False)
+@router.patch("/api/doctors/me")
 def update_doctor_profile(
     payload: ProfileUpdate,
     user: Annotated[dict, Depends(require_role("doctor"))],
@@ -130,7 +140,8 @@ def _profile(user_id: str):
     return {"success": True, "data": _public_user(row)}
 
 
-@router.get("/api/doctor/search")
+@router.get("/api/doctor/search", deprecated=True, include_in_schema=False)
+@router.get("/api/doctors/search")
 def search_doctors(
     user: Annotated[dict, Depends(current_user)],
     search: str = "",
@@ -150,7 +161,8 @@ def search_doctors(
     return {"success": True, "data": [dict(row) for row in rows]}
 
 
-@router.get("/api/doctor/specialties")
+@router.get("/api/doctor/specialties", deprecated=True, include_in_schema=False)
+@router.get("/api/doctors/specialties")
 def list_specialties(user: Annotated[dict, Depends(current_user)]):
     del user
     with transaction() as db:

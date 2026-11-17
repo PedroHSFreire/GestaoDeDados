@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class PatientRegister(BaseModel):
@@ -59,7 +59,38 @@ class AppointmentUpdate(BaseModel):
     status: Literal["agendada", "confirmada", "cancelada", "realizada", "remarcada"] | None = None
     diagnosis: str | None = Field(default=None, max_length=3000)
     prescription: str | None = Field(default=None, max_length=3000)
+    medication_name: str | None = Field(default=None, max_length=120)
+    medication_dosage: str | None = Field(default=None, max_length=120)
+    medication_frequency: str | None = Field(default=None, max_length=120)
+    medication_duration: str | None = Field(default=None, max_length=120)
+    medication_notes: str | None = Field(default=None, max_length=1000)
     doctor_notes: str | None = Field(default=None, max_length=3000)
+
+    @field_validator(
+        "medication_name",
+        "medication_dosage",
+        "medication_frequency",
+        "medication_duration",
+        "medication_notes",
+        mode="before",
+    )
+    @classmethod
+    def trim_medication_fields(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @model_validator(mode="after")
+    def require_medication_name_when_prescription_is_started(self):
+        medication_fields = (
+            self.medication_dosage,
+            self.medication_frequency,
+            self.medication_duration,
+            self.medication_notes,
+        )
+        has_details = any(value and value.strip() for value in medication_fields)
+        has_name = bool(self.medication_name and self.medication_name.strip())
+        if has_details and not has_name:
+            raise ValueError("Informe o nome do medicamento para salvar a prescrição")
+        return self
 
 
 class MedicationCreate(BaseModel):
